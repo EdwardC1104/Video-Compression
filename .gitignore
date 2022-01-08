@@ -1,2 +1,4 @@
 encoded
 videos/*
+.vscode
+__pycache__
