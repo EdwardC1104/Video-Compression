@@ -1,40 +1,29 @@
+import cv2
 import numpy as np
+from math import gcd
 import video_helper
 import image_helper
 import file_helper
 import binary_helper
+import timer
+from encode import encode
 
+
+timer.start()
 
 # Load video
-my_video = video_helper.load_video("videos/original.mp4")
+video = video_helper.load_video("videos/original.mp4")
+
+encode(video, "./encoded")
+
+timer.end("Encode time:")
 
 
-# Read black and white frame
-video_helper.set_frame(my_video, 1000)
-success, my_frame = video_helper.get_next_frame(my_video)
-my_frame = image_helper.convert_BGR_to_GRAY(my_frame)
+print("Encoded video file size from os:",
+      file_helper.get_filesize('./encoded'))
 
 
-# Generate and write metadata
-metadata = image_helper.create_metadata_array(my_frame)
-metadata_bytes = binary_helper.numpy_to_bytearray(metadata)
-file_helper.write_bytearray_to_file(metadata_bytes, "./encoded")
-
-
-# Flatten array
-my_frame_flat = my_frame.flatten()
-print("Uncompressed image size:", image_helper.get_image_size(my_frame))
-
-
-# Replace every 0 with a 1 so that it can be used to indicate 'no change in luminosity'
-image_helper.replace_value_with_indexing(my_frame_flat, 0, 1)
-
-
-# Converts numpy array to python bytes and write it to a file
-my_frame_bytes = binary_helper.numpy_to_bytearray(my_frame_flat)
-file_helper.append_bytearray_to_file(my_frame_bytes, "./encoded")
-print("Encoded image file size from os:", file_helper.get_filesize('./encoded'))
-
+timer.start()
 
 # Open file
 file = open("encoded", "rb")
@@ -46,15 +35,56 @@ frame_width, frame_height = image_helper.read_metadata(file)
 
 # Create numpy array for the frame to fill
 new_frame = np.zeros((frame_width * frame_height), dtype=np.uint8)
+new_frame_two = np.zeros((frame_width * frame_height), dtype=np.uint8)
 
 byte = file.read(1)
 counter = 0
-while byte:
+while counter < (frame_width * frame_height * 2) and byte:
     luminosity = binary_helper.bytes_to_int(byte)
-    new_frame[counter] = luminosity
+    if counter < (frame_width * frame_height):
+        new_frame[counter] = luminosity
+    else:
+        new_frame_two[counter - (frame_width * frame_height)] = luminosity
     counter += 1
     byte = file.read(1)
 
-print("Decoded image file size:", image_helper.get_image_size(new_frame))
-
 file.close()
+
+print("Decoded video file size:", image_helper.get_image_size(
+    new_frame) + image_helper.get_image_size(new_frame_two))
+
+number_of_blocks = gcd(frame_width, frame_height)
+block_size_horizontal = frame_width // number_of_blocks
+block_size_vertical = frame_height // number_of_blocks
+
+decoded_frame = np.zeros((frame_width * frame_height), dtype=np.uint8)
+
+pointer = 0
+for pixel in new_frame_two:
+    if pointer >= (frame_width * frame_height):
+        break
+    if pixel == 0:
+        decoded_frame[pointer:pointer +
+                      144] = np.full(144, fill_value=255, dtype=np.uint8)[:]
+        pointer += 144
+    else:
+        decoded_frame[pointer] = pixel
+        pointer += 1
+
+decoded_frame = decoded_frame.reshape(
+    (decoded_frame.shape[0] // block_size_vertical // block_size_horizontal, block_size_horizontal, block_size_vertical))
+
+decoded_frame = image_helper.combine_blocks_into_image(
+    decoded_frame, frame_width, frame_height)
+
+print(image_helper.get_image_size(
+    decoded_frame))
+
+
+timer.end("Decode time:")
+
+image_helper.display_image(decoded_frame)
+original_frame = image_helper.convert_BGR_to_GRAY(
+    video_helper.get_frame(my_video, 60))
+
+print(cv2.PSNR(decoded_frame, original_frame))
