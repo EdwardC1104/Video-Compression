@@ -85,6 +85,6 @@ timer.end("Decode time:")
 
 image_helper.display_image(decoded_frame)
 original_frame = image_helper.convert_BGR_to_GRAY(
-    video_helper.get_frame(my_video, 60))
+    video_helper.get_frame(video, 60))
 
 print(cv2.PSNR(decoded_frame, original_frame))
