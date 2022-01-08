@@ -6,7 +6,7 @@ import binary_helper
 
 
 # Load video
-my_video = video_helper.load_video("videos/bbb_sunflower_short.mp4")
+my_video = video_helper.load_video("videos/original.mp4")
 
 
 # Read black and white frame
