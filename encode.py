@@ -8,7 +8,7 @@ import binary_helper
 def encode(video, filepath):
 
     # Read black and white frame
-    video_helper.set_frame(video, 59.5*60)
+    video_helper.set_frame(video, 59*60)
     success, frame = video_helper.get_next_frame(video)
     frame = image_helper.convert_BGR_to_GRAY(frame)
 
@@ -37,7 +37,8 @@ def encode(video, filepath):
     width, height = image_helper.get_dimensions(frame)
 
     # Calculate block size
-    size_horizontal, size_vertical = image_helper.calculate_block_size(width, height)
+    size_horizontal, size_vertical = image_helper.calculate_block_size(
+        width, height)
     block_size = size_horizontal * size_vertical
 
     # Debug count frames
@@ -88,4 +89,5 @@ def encode(video, filepath):
         completed_frames += 1
 
     print("Number of frames encoded:", completed_frames)
-    print("Theoretical uncompressed video file size:", completed_frames * uncompressed_frame_size)
+    print("Theoretical uncompressed video file size:",
+          completed_frames * uncompressed_frame_size)
