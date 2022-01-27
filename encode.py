@@ -8,7 +8,7 @@ import binary_helper
 def encode(video, filepath):
 
     # Read black and white frame
-    video_helper.set_frame(video, 58*60)
+    video_helper.set_frame(video, 59.5*60)
     success, frame = video_helper.get_next_frame(video)
     frame = image_helper.convert_BGR_to_GRAY(frame)
 
@@ -17,8 +17,8 @@ def encode(video, filepath):
     metadata_bytes = binary_helper.numpy_to_bytearray(metadata)
     file_helper.write_bytearray_to_file(metadata_bytes, "./encoded")
 
-    print("Single uncompressed frame size:",
-          image_helper.get_image_size(frame))
+    uncompressed_frame_size = image_helper.get_image_size(frame)
+    print("Single uncompressed frame size:", uncompressed_frame_size)
 
     # Replace every 0 with a 1 so that it can be used to indicate 'no change in luminosity'
     frame = image_helper.replace_value(frame, 0, 1)
@@ -37,9 +37,11 @@ def encode(video, filepath):
     width, height = image_helper.get_dimensions(frame)
 
     # Calculate block size
-    size_horizontal, size_vertical = image_helper.calculate_block_size(
-        frame)
+    size_horizontal, size_vertical = image_helper.calculate_block_size(width, height)
     block_size = size_horizontal * size_vertical
+
+    # Debug count frames
+    completed_frames = 0
 
     # Load next frame
     success, frame = video_helper.get_next_frame(video)
@@ -81,3 +83,9 @@ def encode(video, filepath):
 
         # Load next frame
         success, frame = video_helper.get_next_frame(video)
+
+        # Debug
+        completed_frames += 1
+
+    print("Number of frames encoded:", completed_frames)
+    print("Theoretical uncompressed video file size:", completed_frames * uncompressed_frame_size)

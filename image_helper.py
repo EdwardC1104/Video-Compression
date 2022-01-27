@@ -2,6 +2,9 @@ import cv2
 import numpy as np
 from math import gcd
 import binary_helper
+import os
+os.environ['MPLCONFIGDIR'] = os.getcwd() + '/configs/'
+import matplotlib.pyplot as plt
 
 
 def convert_BGR_to_GRAY(image):
@@ -41,8 +44,8 @@ def get_image_size(image):
 
 
 def split_into_blocks(arr):
-    nrows, ncols = calculate_block_size(arr)
     h, w = arr.shape
+    nrows, ncols = calculate_block_size(h, w)
     assert h % nrows == 0, f"{h} rows is not evenly divisible by {nrows}"
     assert w % ncols == 0, f"{w} cols is not evenly divisible by {ncols}"
     return (arr.reshape(h//nrows, nrows, -1, ncols).swapaxes(1, 2).reshape(-1, nrows, ncols))
@@ -54,17 +57,20 @@ def combine_blocks_into_image(arr, h, w):
 
 
 def display_image(image):
-    cv2.imshow("Image", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    plt.axis("off")
+    plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    plt.show()
+    # cv2.imshow("Image", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 
 def get_dimensions(image):
     return image.shape
 
 
-def calculate_block_size(image):
-    width, height = get_dimensions(image)
+def calculate_block_size(width, height):
+    # width, height = get_dimensions(image)
     number_of_blocks = gcd(width, height)
     block_size_horizontal = width // number_of_blocks
     block_size_vertical = height // number_of_blocks
