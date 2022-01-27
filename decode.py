@@ -5,6 +5,7 @@ from math import gcd
 import image_helper
 import binary_helper
 
+
 def decode(filepath):
     # Open file
     file = open(filepath, "rb")
@@ -12,24 +13,24 @@ def decode(filepath):
     # Read metadata from file
     frame_width, frame_height = image_helper.read_metadata(file)
 
-    
     # Create numpy array for the frame to fill
     new_frame = np.zeros((frame_width * frame_height), dtype=np.uint8)
 
     # Calculate block size
-    block_size_horizontal, block_size_vertical = image_helper.calculate_block_size(frame_width, frame_height)
+    block_size_horizontal, block_size_vertical = image_helper.calculate_block_size(
+        frame_width, frame_height)
 
     # Reads 1 byte
     byte = file.read(1)
 
     # Counts decoded frames for debug
-    completed_frames = 0  
+    completed_frames = 0
 
     # Number of luminosity values read - resets on each new frame
-    counter = 0 
+    counter = 0
 
     # Location in new_frame array
-    new_frame_pointer = 0 
+    new_frame_pointer = 0
 
     # Breaks at the end of the file
     while byte:
@@ -43,7 +44,8 @@ def decode(filepath):
             new_frame_pointer = 0
 
             # Array is populated by the decode frame
-            decoded_frame = image_helper.template_image(frame_width, frame_height)
+            decoded_frame = image_helper.template_image(
+                frame_width, frame_height)
 
             # Either add the pixel to the frame or the block from the previous frame
             pointer = 0
@@ -52,7 +54,7 @@ def decode(filepath):
                     break
                 if pixel == 0:
                     decoded_frame[pointer:pointer +
-                                144] = np.full(144, fill_value=255, dtype=np.uint8)[:]
+                                  144] = np.full(144, fill_value=255, dtype=np.uint8)[:]
                     pointer += 144
                 else:
                     decoded_frame[pointer] = pixel
@@ -68,11 +70,11 @@ def decode(filepath):
 
             # Debug count frames
             completed_frames += 1
-            print("Number of frames completed:", completed_frames, "(Exit the opened window to continue decode)")
+            print("Number of frames completed:", completed_frames,
+                  "(Exit the opened window to continue decode)")
 
             # Show image window - DEBUG
             image_helper.display_image(decoded_frame)
-            
 
         # Convert binary value to decimal and add it to the array
         luminosity = binary_helper.bytes_to_int(byte)
